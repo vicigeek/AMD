@@ -1,4 +1,4 @@
-# AMD
+# AMD - Proof Of Concept
 VICIDIAL and AMD using wav2vec-vm-finetune
 
 ````

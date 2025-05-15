@@ -14,28 +14,16 @@ https://github.com/user-attachments/assets/480c1c37-5457-45d6-950c-2bd5fc3a4a99
 
 
 
-exten => 7002,1,NoOp(Test AI AMD)
- ; Answer the call and run your EAGI script
- same  => n,Answer()
- same  => n,EAGI(amd3.py)
- ; Show what we got
- same  => n,NoOp(RESULT: ${AMDSTATUS} / ${AMDCAUSE})
+; VICIDIAL_auto_dialer transfer script AMD with Load Balanced:
+exten => 8369,1,AGI(agi://127.0.0.1:4577/call_log)
+exten => 8369,n,Playback(sip-silence)
+exten => 8369,n,EAGI(amd3.py)  ; <- AI detection instead of AMD()
+exten => 8369,n,NoOp(RESULT: ${AMDSTATUS} / ${AMDCAUSE})
+exten => 8369,n,GotoIf($["${AMDSTATUS}" = "MACHINE"]?vm,1)
+exten => 8369,n,GotoIf($["${AMDSTATUS}" = "AIERR"]?fail,1)
 
- ; If it’s a MACHINE (voicemail), jump to the vm context
- same  => n,GotoIf($["${AMDSTATUS}"="MACHINE"]?vm,1)
- ; If there was an error, drop the call
- same  => n,GotoIf($["${AMDSTATUS}"="AIERR"]?fail,1)
- ; Otherwise (HUMAN) go on to your normal flow at 8368
- same  => n,Goto(8368,1)
 
- ; ——— Voicemail / MACHINE path ———
-exten => vm,1,NoOp(Voicemail/MACHINE detected – playing audio)
- same  => n,Playback(vm-detected)       ; replace "vm-detected" with your file
- same  => n,Hangup()
-
- ; ——— Error path ———
-exten => fail,1,NoOp(AIAMD error, hanging up)
- same  => n,Hangup()
-
- ; ——— Your normal human flow at 8368 ———
-;  (keep whatever you already have in context default,exten=8368)
+;exten => 8369,n,AMD(2000,2000,1000,5000,120,50,4,256) 
+;exten => 8369,n,AGI(VD_amd.agi,${EXTEN})
+exten => 8369,n,AGI(agi-VDAD_ALL_outbound.agi,NORMAL-----LB-----${CONNECTEDLINE(name)})
+exten => 8369,n,Hangup()
